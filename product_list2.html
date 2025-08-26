@@ -1,129 +1,0 @@
-
-{% load static %}
-<!DOCTYPE html>
-<html lang="fa">
-<head>
-    <meta charset="UTF-8">
-    <title>منوی غذا - خونه سوسیس</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
-    <div class="topbar">
-        <img src="{% static 'logo.png' %}" class="logo" alt="لوگو">
-        <h1>خونه سوسیس</h1>
-        <div class="menu">
-            <!-- تغییر href به id فرم سفارش -->
-            <a href="#order-section" class="btn">ثبت سفارش</a>
-            <a href="/about/" class="btn">درباره ما</a>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="product-list">
-            {% for product in products %}
-                <div class="product">
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                    <h3>{{ product.name }}</h3>
-                    <p>{{ product.description }}</p>
-                    <p class="price">{{ product.price }} تومان</p>
-                    <button class="btn add-to-cart" 
-                            data-name="{{ product.name }}" 
-                            data-price="{{ product.price }}">
-                        افزودن به سبد خرید
-                    </button>
-                </div>
-            {% empty %}
-                <p>هنوز محصولی ثبت نشده است.</p>
-            {% endfor %}
-        </div>
-
-        <!-- ✅ فرم سفارش -->
-        <div class="order-form" id="order-section">
-            <h2>ثبت سفارش</h2>
-            <form id="orderForm">
-                <input type="text" id="name" placeholder="نام شما" required>
-                <input type="tel" id="phone" placeholder="شماره تماس" required>
-                <button type="submit">ثبت سفارش</button>
-            </form>
-
-            <!-- ✅ سبد خرید -->
-            <div id="cart-box">
-                <h3>🛒 سبد خرید شما</h3>
-                <ul id="cart-items"></ul>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const cart = [];
-
-        // اضافه کردن محصول
-        document.querySelectorAll('.add-to-cart').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const name = btn.dataset.name;
-                const price = btn.dataset.price;
-                cart.push({ name, price });
-                updateCart();
-            });
-        });
-
-        // بروزرسانی سبد خرید
-        function updateCart() {
-            const cartList = document.getElementById('cart-items');
-            cartList.innerHTML = '';
-            cart.forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = `${item.name} - ${item.price} تومان`;
-                cartList.appendChild(li);
-            });
-        }
-
-        // ارسال سفارش به بک‌اند Django
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-
-            if (cart.length === 0) {
-                alert("❌ لطفاً ابتدا محصولی به سبد خرید اضافه کنید.");
-                return;
-            }
-
-            fetch('/order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone, cart })
-            })
-
-            fetch('https://silent-haze-581c.elyeshraghi-sketch.workers.dev/order', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, phone, cart })
-            })
-
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    alert('✅ سفارش شما با موفقیت ارسال شد!');
-                    cart.length = 0;
-                    updateCart();
-                    document.getElementById('orderForm').reset();
-                } else {
-                    alert('لطفا فیلتر شکن را روشن کنید!');
-                }
-            });
-        });
-
-        // اسکرول نرم برای لینک‌های داخل صفحه
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-    </script>
-</body>
-</html>
